@@ -457,6 +457,12 @@ function showFinalScore() {
     // Hide the pitch column
     document.querySelector('.pitch-column').style.display = 'none';
 
+    // Change main-content to centered layout
+    const gameContent = document.getElementById('game-content');
+    gameContent.style.display = 'flex';
+    gameContent.style.alignItems = 'center';
+    gameContent.style.justifyContent = 'center';
+
     // Style the options panel like the start screen
     const optionsPanel = document.querySelector('.options-panel');
     optionsPanel.style.display = 'flex';
@@ -486,7 +492,10 @@ function showFinalScore() {
     title.style.fontSize = '2em';
     title.style.color = '#333';
     title.style.marginBottom = '30px';
-    title.textContent = 'PassMaster';
+    title.textContent = percentage === 100 ? "Football Genius!" :
+                        percentage >= 90 ? "Football Master!" :
+                        percentage >= 80 ? "Adept Footballer!" :
+                        "Promising Player!";
     title.style.opacity = '0';
     title.style.animation = 'fadeInUp 0.6s ease-out 0.3s forwards';
     optionsContainer.appendChild(title);
@@ -499,7 +508,7 @@ function showFinalScore() {
     scoreCard.innerHTML = `
         <div class="final-score">
             <div class="score-number">${score} / ${shuffledScenarios.length}</div>
-            <div class="score-percentage">${percentage}%</div>
+            <div class="score-percentage">You scored ${percentage}%</div>
         </div>
         <div class="score-message ${percentage >= 70 ? 'success' : 'needs-work'}">
             <h3>${percentage >= 70 ? 'Great job!' : 'Keep practicing!'}</h3>
@@ -519,8 +528,13 @@ function showFinalScore() {
 
     // Update next button to be restart button
     const nextBtn = document.getElementById('next-btn');
-    nextBtn.textContent = 'Start Again';
+    nextBtn.textContent = 'Play Again';
     nextBtn.onclick = () => {
+        // Reset game content layout
+        gameContent.style.display = 'none';
+        gameContent.style.alignItems = '';
+        gameContent.style.justifyContent = '';
+
         // Reset options panel styling
         optionsPanel.style.display = 'flex';
         optionsPanel.style.alignItems = '';
@@ -528,9 +542,6 @@ function showFinalScore() {
         optionsPanel.style.padding = '20px';
         optionsContainer.style.textAlign = '';
         optionsContainer.style.maxWidth = '';
-
-        // Hide game content
-        document.getElementById('game-content').style.display = 'none';
 
         // Show start screen
         document.getElementById('start-screen').style.display = 'flex';
