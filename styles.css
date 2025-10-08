@@ -395,6 +395,13 @@ header h1 {
     width: 100%;
     display: block;
     overflow: hidden;
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.option-btn * {
+    color: inherit;
+    -webkit-text-fill-color: inherit;
 }
 
 .option-btn:active {
@@ -407,14 +414,16 @@ header h1 {
 
 /* Disable all hover effects on answered buttons */
 .option-btn.answered {
-    pointer-events: auto;
-    transform: none !important;
+    pointer-events: none;
+    cursor: default;
 }
 
 .option-btn.answered:hover,
 .option-btn.answered:active,
 .option-btn.answered:focus {
     transform: none !important;
+    background: inherit !important;
+    border-color: inherit !important;
 }
 
 /* Only apply hover effects on devices that support hover AND not answered */
@@ -451,8 +460,10 @@ header h1 {
 .option-btn.neutral-answer {
     cursor: default;
     transform: none !important;
+    pointer-events: none;
 }
 
+.option-btn.correct-answer,
 .option-btn.correct-answer:hover,
 .option-btn.correct-answer:active,
 .option-btn.correct-answer:focus {
@@ -461,6 +472,7 @@ header h1 {
     border-color: #28a745 !important;
 }
 
+.option-btn.incorrect-answer,
 .option-btn.incorrect-answer:hover,
 .option-btn.incorrect-answer:active,
 .option-btn.incorrect-answer:focus {
@@ -469,6 +481,7 @@ header h1 {
     border-color: #dc3545 !important;
 }
 
+.option-btn.neutral-answer,
 .option-btn.neutral-answer:hover,
 .option-btn.neutral-answer:active,
 .option-btn.neutral-answer:focus {
