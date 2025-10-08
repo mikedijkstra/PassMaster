@@ -371,24 +371,24 @@ const scenarios = [
     options: [
       {
         id: "cutinside",
-        text: "Cut inside and shoot at goal",
+        text: "Cut back and pass to a teammate",
         explanation:
-          "✓ BEST CHOICE: Cutting inside gets you to a better shooting angle in front of goal. This gives you the best chance to score when you're on your own.",
+          "✗ POOR CHOICE: Your teammate is too far away and defenders can easily intercept. You're in a great position to score yourself - don't give up the chance!",
       },
       {
         id: "keeprunning",
         text: "Keep running and cross the ball in",
         explanation:
-          "✗ POOR CHOICE: You have no teammates in the box to cross to! Don't waste a good chance by crossing to no one. Cut inside and shoot yourself.",
+          "✗ POOR CHOICE: You have no teammates in the box to cross to! Don't waste a good chance by crossing to no one. Turn towards goal and shoot yourself.",
       },
       {
         id: "shootwide",
-        text: "Shoot from the wide angle now",
+        text: "Turn towards goal and shoot",
         explanation:
-          "✗ POOR CHOICE: Shooting from this angle is very difficult. The goalkeeper will easily save it. Cut inside first to get a better angle!",
+          "✓ BEST CHOICE: Turning towards goal gets you a better shooting angle. This gives you the best chance to score when you have space to shoot.",
       },
     ],
-    correctAnswer: "cutinside",
+    correctAnswer: "shootwide",
   },
   {
     id: 11,
