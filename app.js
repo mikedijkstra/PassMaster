@@ -33,7 +33,7 @@ function init() {
 
     // Reset next button text
     const nextBtn = document.getElementById('next-btn');
-    nextBtn.textContent = 'Next Scenario';
+    nextBtn.textContent = 'Next';
 
     loadScenario(shuffledScenarios[currentScenarioIndex]);
 }
@@ -118,6 +118,39 @@ function drawPenaltyArea(svg, x, width, height, side) {
         'stroke-width': 2
     });
     svg.appendChild(smallBox);
+
+    // Draw goals
+    const goalWidth = 8;
+    const goalHeight = 120;
+    const goalX = side === 'left' ? 0 : width - goalWidth;
+    const goalY = (height - goalHeight) / 2;
+
+    const goal = createSVGElement('rect', {
+        x: goalX,
+        y: goalY,
+        width: goalWidth,
+        height: goalHeight,
+        fill: '#fff',
+        opacity: 0.9
+    });
+    svg.appendChild(goal);
+
+    // Goal labels
+    const labelX = side === 'left' ? 60 : width - 60;
+    const labelY = 30;
+    const labelText = side === 'left' ? '← DEFENDING' : 'ATTACKING →';
+
+    const label = createSVGElement('text', {
+        x: labelX,
+        y: labelY,
+        'text-anchor': 'middle',
+        fill: '#fff',
+        'font-size': '14',
+        'font-weight': 'bold',
+        opacity: 0.7
+    });
+    label.textContent = labelText;
+    svg.appendChild(label);
 }
 
 function createSVGElement(type, attributes) {
@@ -140,6 +173,7 @@ function loadScenario(scenario) {
     const optionsHeading = document.querySelector('.options-heading');
     if (optionsHeading) {
         optionsHeading.textContent = 'Choose your answer';
+        optionsHeading.classList.remove('correct', 'incorrect');
     }
 
     // Draw pitch and players
@@ -163,6 +197,8 @@ function loadScenario(scenario) {
         button.textContent = option.text;
         button.setAttribute('data-option-id', option.id);
         button.setAttribute('data-explanation', option.explanation);
+        button.style.opacity = '0';
+        button.style.animation = `slideInRight 0.5s ease-out ${0.4 + index * 0.1}s forwards`;
         button.onclick = () => selectAnswer(option.id, scenario.correctAnswer, scenario.explanation, shuffledOptions);
 
         // Add hover effect to highlight player on pitch (only before answering)
@@ -189,10 +225,11 @@ function loadScenario(scenario) {
 function drawPlayers(players) {
     const svg = document.getElementById('pitch');
 
-    players.forEach(player => {
+    players.forEach((player, index) => {
         // Create a group for each player
         const group = createSVGElement('g', {
-            'data-player-id': player.id
+            'data-player-id': player.id,
+            'style': `opacity: 0; animation: fadeIn 0.5s ease-out ${0.1 + index * 0.08}s forwards;`
         });
 
         // Special styling for the current player (you)
@@ -294,7 +331,17 @@ function selectAnswer(selectedId, correctId, explanation, allOptions) {
     if (answered) return; // Prevent multiple answers
     answered = true;
 
+    // Remove focus from all buttons (prevents hover state on mobile)
+    document.querySelectorAll('.option-btn').forEach(btn => btn.blur());
+
     const isCorrect = selectedId === correctId;
+
+    // Update the options heading to show correct/incorrect
+    const optionsHeading = document.querySelector('.options-heading');
+    if (optionsHeading) {
+        optionsHeading.textContent = isCorrect ? '✓ Correct' : '✗ Incorrect';
+        optionsHeading.classList.add(isCorrect ? 'correct' : 'incorrect');
+    }
 
     // Update score
     if (isCorrect) {
@@ -311,34 +358,61 @@ function selectAnswer(selectedId, correctId, explanation, allOptions) {
     buttons.forEach(btn => {
         const btnId = btn.getAttribute('data-option-id');
 
+        // Add answered class to disable any hover/focus effects
+        btn.classList.add('answered');
+
         // Find the matching option to get its explanation
         const matchingOption = allOptions.find(opt => opt.id == btnId);
 
         if (matchingOption) {
-            // Create expanded content
+            // Extract verdict and explanation (supports both ~ and ? for risky options)
+            const verdictMatch = matchingOption.explanation.match(/^([✓✗~?])\s*([A-Z\s]+):\s*(.+)$/);
+            let verdictBadge = null;
+            let explanationText = matchingOption.explanation;
+
+            if (verdictMatch) {
+                const symbol = verdictMatch[1];
+                const verdict = verdictMatch[2].trim();
+                explanationText = verdictMatch[3];
+
+                // Map verdicts to friendlier terms (with symbols)
+                let displayText = `${symbol} ${verdict}`;
+
+                if (verdict === 'POOR CHOICE') {
+                    displayText = `${symbol} NOT RECOMMENDED`;
+                } else if (verdict === 'OKAY') {
+                    displayText = `${symbol} COULD WORK`;
+                } else if (verdict === 'RISKY') {
+                    displayText = `${symbol} RISKY OPTION`;
+                }
+
+                // Create verdict badge
+                verdictBadge = document.createElement('span');
+                verdictBadge.className = 'verdict-badge';
+                verdictBadge.textContent = displayText;
+
+                // Add appropriate class based on symbol
+                if (symbol === '✓') {
+                    verdictBadge.classList.add('best');
+                } else if (symbol === '✗') {
+                    verdictBadge.classList.add('poor');
+                } else if (symbol === '~' || symbol === '?') {
+                    verdictBadge.classList.add('risky');
+                }
+            }
+
+            // Create expanded content for explanation
             const explanationDiv = document.createElement('div');
             explanationDiv.className = 'option-explanation';
 
-            // If this is the selected answer, add the result indicator
-            if (btnId == selectedId) {
-                // Add result badge to the button itself
-                const resultBadge = document.createElement('span');
-                resultBadge.className = 'result-badge';
-                resultBadge.textContent = isCorrect ? '✓' : '✗';
-                btn.appendChild(resultBadge);
+            // Add explanation text
+            const textNode = document.createTextNode(explanationText);
+            explanationDiv.appendChild(textNode);
 
-                // Add explanation text
-                explanationDiv.textContent = matchingOption.explanation;
-
-                // Add overall explanation if answer was wrong
-                if (!isCorrect) {
-                    const overallExplanation = document.createElement('div');
-                    overallExplanation.className = 'overall-explanation';
-                    overallExplanation.textContent = explanation;
-                    explanationDiv.appendChild(overallExplanation);
-                }
-            } else {
-                explanationDiv.textContent = matchingOption.explanation;
+            // Add verdict badge to bottom if exists
+            if (verdictBadge) {
+                explanationDiv.appendChild(document.createElement('br'));
+                explanationDiv.appendChild(verdictBadge);
             }
 
             // Add visual indicators based on the explanation quality markers
@@ -346,7 +420,7 @@ function selectAnswer(selectedId, correctId, explanation, allOptions) {
                 btn.classList.add('correct-answer');
             } else if (matchingOption.explanation.startsWith('✗')) {
                 btn.classList.add('incorrect-answer');
-            } else if (matchingOption.explanation.startsWith('~')) {
+            } else if (matchingOption.explanation.startsWith('~') || matchingOption.explanation.startsWith('?')) {
                 btn.classList.add('neutral-answer');
             }
 
@@ -404,6 +478,8 @@ function showFinalScore() {
     logo.className = 'start-icon';
     logo.textContent = '⚽';
     logo.style.marginBottom = '20px';
+    logo.style.opacity = '0';
+    logo.style.animation = 'scaleIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
     optionsContainer.appendChild(logo);
 
     const title = document.createElement('h2');
@@ -411,11 +487,15 @@ function showFinalScore() {
     title.style.color = '#333';
     title.style.marginBottom = '30px';
     title.textContent = 'PassMaster';
+    title.style.opacity = '0';
+    title.style.animation = 'fadeInUp 0.6s ease-out 0.3s forwards';
     optionsContainer.appendChild(title);
 
     // Create score card
     const scoreCard = document.createElement('div');
     scoreCard.className = 'score-card';
+    scoreCard.style.opacity = '0';
+    scoreCard.style.animation = 'fadeInUp 0.6s ease-out 0.5s forwards';
     scoreCard.innerHTML = `
         <div class="final-score">
             <div class="score-number">${score} / ${shuffledScenarios.length}</div>
@@ -460,7 +540,14 @@ function showFinalScore() {
 
 // Update score display
 function updateScoreDisplay() {
-    document.getElementById('score').textContent = score;
+    const scoreElement = document.getElementById('score');
+    scoreElement.textContent = score;
+
+    // Add pulse animation when score changes
+    scoreElement.style.animation = 'none';
+    setTimeout(() => {
+        scoreElement.style.animation = 'pulse 0.4s ease-out';
+    }, 10);
 }
 
 // Highlight player when hovering over option
@@ -522,11 +609,16 @@ function startGame() {
     document.getElementById('start-screen').style.display = 'none';
 
     // Show header and score panel
-    document.getElementById('game-header').style.display = 'flex';
-    document.getElementById('score-panel').style.display = 'flex';
+    const header = document.getElementById('game-header');
+    const scorePanel = document.getElementById('score-panel');
+    header.style.display = 'flex';
+    scorePanel.style.display = 'flex';
 
-    // Show game content
-    document.getElementById('game-content').style.display = 'grid';
+    // Show game content with animation
+    const gameContent = document.getElementById('game-content');
+    gameContent.style.display = 'grid';
+    gameContent.style.opacity = '0';
+    gameContent.style.animation = 'fadeIn 0.6s ease-out forwards';
 
     // Initialize the game
     init();

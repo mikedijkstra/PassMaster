@@ -4,6 +4,75 @@
     box-sizing: border-box;
 }
 
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -68,6 +137,7 @@ header h1 {
     justify-content: center;
     background: #f8f9fa;
     padding: 20px;
+    animation: fadeIn 0.6s ease-out;
 }
 
 .start-content {
@@ -78,12 +148,14 @@ header h1 {
 .start-icon {
     font-size: 5em;
     margin-bottom: 20px;
+    animation: scaleIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .start-content h2 {
     font-size: 2em;
     color: #333;
     margin-bottom: 20px;
+    animation: fadeInUp 0.8s ease-out 0.3s backwards;
 }
 
 .start-content p {
@@ -91,6 +163,7 @@ header h1 {
     color: #666;
     line-height: 1.6;
     margin-bottom: 30px;
+    animation: fadeInUp 0.8s ease-out 0.5s backwards;
 }
 
 .play-btn {
@@ -103,11 +176,17 @@ header h1 {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.3s ease;
+    animation: bounceIn 0.8s ease-out 0.7s backwards;
 }
 
 .play-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(30, 60, 114, 0.4);
+    background: linear-gradient(135deg, #2a4c92 0%, #3a62b8 100%);
+    box-shadow: 0 2px 8px rgba(30, 60, 114, 0.3);
+}
+
+.play-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(30, 60, 114, 0.2);
 }
 
 .main-content {
@@ -229,6 +308,14 @@ header h1 {
     flex-shrink: 0;
 }
 
+.options-heading.correct {
+    color: #28a745;
+}
+
+.options-heading.incorrect {
+    color: #dc3545;
+}
+
 #options-container {
     display: flex;
     flex-direction: column;
@@ -300,12 +387,43 @@ header h1 {
     font-weight: 500;
     position: relative;
     min-height: 48px;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    color: #333;
+    width: 100%;
+    display: block;
+    overflow: hidden;
 }
 
-.option-btn:hover:not(:disabled) {
-    background: #e9ecef;
-    border-color: #1e3c72;
-    transform: translateX(5px);
+.option-btn:active {
+    outline: none;
+}
+
+.option-btn:focus {
+    outline: none;
+}
+
+/* Disable all hover effects on answered buttons */
+.option-btn.answered {
+    pointer-events: auto;
+    transform: none !important;
+}
+
+.option-btn.answered:hover,
+.option-btn.answered:active,
+.option-btn.answered:focus {
+    transform: none !important;
+}
+
+/* Only apply hover effects on devices that support hover AND not answered */
+@media (hover: hover) and (pointer: fine) {
+    .option-btn:hover:not(.answered) {
+        background: #e9ecef;
+        border-color: #1e3c72;
+        transform: translateX(5px);
+    }
 }
 
 .option-btn.correct-answer {
@@ -328,21 +446,75 @@ header h1 {
     border-width: 3px;
 }
 
-.option-btn.correct-answer:hover,
-.option-btn.incorrect-answer:hover,
-.option-btn.neutral-answer:hover {
+.option-btn.correct-answer,
+.option-btn.incorrect-answer,
+.option-btn.neutral-answer {
     cursor: default;
-    transform: none;
+    transform: none !important;
+}
+
+.option-btn.correct-answer:hover,
+.option-btn.correct-answer:active,
+.option-btn.correct-answer:focus {
+    transform: none !important;
+    background: #d4edda !important;
+    border-color: #28a745 !important;
+}
+
+.option-btn.incorrect-answer:hover,
+.option-btn.incorrect-answer:active,
+.option-btn.incorrect-answer:focus {
+    transform: none !important;
+    background: #f8d7da !important;
+    border-color: #dc3545 !important;
+}
+
+.option-btn.neutral-answer:hover,
+.option-btn.neutral-answer:active,
+.option-btn.neutral-answer:focus {
+    transform: none !important;
+    background: #fff3cd !important;
+    border-color: #ffc107 !important;
 }
 
 .option-explanation {
-    margin-top: 10px;
-    padding-top: 10px;
+    margin-top: 8px;
+    padding-top: 8px;
     border-top: 1px solid rgba(0, 0, 0, 0.1);
     font-size: 0.9em;
-    line-height: 1.5;
+    line-height: 1.4;
     color: #333;
     font-weight: normal;
+    width: 100%;
+    clear: both;
+    display: block;
+}
+
+/* Add badges for different verdict types - injected via JS */
+.verdict-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.75em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-top: 6px;
+}
+
+.verdict-badge.best {
+    background: #28a745;
+    color: white;
+}
+
+.verdict-badge.poor {
+    background: #dc3545;
+    color: white;
+}
+
+.verdict-badge.risky {
+    background: #ffc107;
+    color: #333;
 }
 
 .result-badge {
@@ -406,13 +578,34 @@ header h1 {
     margin-top: 10px;
 }
 
+#next-btn:not(.hidden) {
+    animation: bounceIn 0.6s ease-out;
+}
+
 #next-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(30, 60, 114, 0.4);
+    background: linear-gradient(135deg, #2a4c92 0%, #3a62b8 100%);
+    box-shadow: 0 2px 8px rgba(30, 60, 114, 0.3);
+}
+
+#next-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(30, 60, 114, 0.2);
 }
 
 #next-btn.hidden {
     display: none;
+}
+
+.pitch-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.question-header {
+    animation: fadeIn 0.6s ease-out;
+}
+
+.options-heading {
+    animation: fadeIn 0.6s ease-out 0.2s backwards;
 }
 
 /* Responsive adjustments */
