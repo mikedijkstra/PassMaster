@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PassMaster Social Card</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f0f0;
+        }
+        .card {
+            width: 1200px;
+            height: 630px;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .pitch-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+        }
+        .content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: white;
+        }
+        .icon {
+            font-size: 140px;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+        .title {
+            font-size: 100px;
+            font-weight: bold;
+            margin: 0 0 20px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 40px;
+            margin: 0;
+            opacity: 0.95;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 300;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .line {
+            width: 200px;
+            height: 4px;
+            background: white;
+            margin: 30px auto;
+            border-radius: 2px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <svg class="pitch-bg" viewBox="0 0 800 600">
+            <!-- Simplified pitch background -->
+            <line x1="400" y1="0" x2="400" y2="600" stroke="white" stroke-width="2"/>
+            <circle cx="400" cy="300" r="60" fill="none" stroke="white" stroke-width="2"/>
+            <rect x="0" y="150" width="120" height="300" fill="none" stroke="white" stroke-width="2"/>
+            <rect x="680" y="150" width="120" height="300" fill="none" stroke="white" stroke-width="2"/>
+        </svg>
+        <div class="content">
+            <div class="icon">⚽</div>
+            <h1 class="title">PassMaster</h1>
+            <div class="line"></div>
+            <p class="subtitle">Learn positioning and passing decisions</p>
+        </div>
+    </div>
+</body>
+</html>
