@@ -227,6 +227,7 @@ header h1 {
 
     .options-panel {
         padding: 15px;
+        padding-bottom: 100px;
         overflow-y: visible;
         flex: none;
     }
