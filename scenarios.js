@@ -163,9 +163,9 @@ const scenarios = [
       },
       {
         id: "move2",
-        text: "Move into the space between the two centre backs",
+        text: "Stand still and wait for the pass",
         explanation:
-          "? COULD WORK: This can work but both defenders are already positioned there, so you might run into a crowded area. Moving wide is smarter to stretch the defense.",
+          "✗ POOR CHOICE: On a counter attack, you need to move! Standing still means you're not creating space or getting into a better position. You're actually staying closer to defenders instead of finding space.",
       },
       {
         id: "move3",

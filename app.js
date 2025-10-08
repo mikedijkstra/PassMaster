@@ -5,6 +5,7 @@ let currentScenarioIndex = 0;
 let score = 0;
 let answered = false;
 let shuffledScenarios = [];
+let selectedOption = null;
 
 // Shuffle array helper function
 function shuffleArray(array) {
@@ -16,14 +17,58 @@ function shuffleArray(array) {
     return shuffled;
 }
 
-// Initialize the app
-function init() {
-    currentScenarioIndex = 0;
-    score = 0;
-    answered = false;
+// Save game state to localStorage
+function saveGameState() {
+    const gameState = {
+        currentScenarioIndex,
+        score,
+        shuffledScenarioIds: shuffledScenarios.map(s => s.id),
+        timestamp: Date.now()
+    };
+    localStorage.setItem('passMasterGameState', JSON.stringify(gameState));
+}
 
-    // Shuffle scenarios at start
-    shuffledScenarios = shuffleArray(scenarios);
+// Load game state from localStorage
+function loadGameState() {
+    const savedState = localStorage.getItem('passMasterGameState');
+    if (!savedState) return null;
+
+    try {
+        const gameState = JSON.parse(savedState);
+        // Restore shuffled scenarios from saved IDs
+        if (gameState.shuffledScenarioIds) {
+            gameState.shuffledScenarios = gameState.shuffledScenarioIds.map(id =>
+                scenarios.find(s => s.id === id)
+            ).filter(s => s !== undefined);
+        }
+        return gameState;
+    } catch (e) {
+        console.error('Failed to load game state:', e);
+        return null;
+    }
+}
+
+// Clear game state from localStorage
+function clearGameState() {
+    localStorage.removeItem('passMasterGameState');
+}
+
+// Initialize the app
+function init(resumeState = null) {
+    if (resumeState) {
+        // Resume from saved state
+        currentScenarioIndex = resumeState.currentScenarioIndex;
+        score = resumeState.score;
+        shuffledScenarios = resumeState.shuffledScenarios;
+    } else {
+        // Start fresh
+        currentScenarioIndex = 0;
+        score = 0;
+        shuffledScenarios = shuffleArray(scenarios);
+        clearGameState();
+    }
+
+    answered = false;
 
     updateScoreDisplay();
 
@@ -36,6 +81,11 @@ function init() {
     nextBtn.textContent = 'Next';
 
     loadScenario(shuffledScenarios[currentScenarioIndex]);
+
+    // Save initial state
+    if (!resumeState) {
+        saveGameState();
+    }
 }
 
 // Draw the football pitch
@@ -164,6 +214,7 @@ function createSVGElement(type, attributes) {
 // Load a scenario
 function loadScenario(scenario) {
     answered = false;
+    selectedOption = null;
 
     // Update scenario counter
     document.getElementById('current').textContent = currentScenarioIndex + 1;
@@ -173,7 +224,6 @@ function loadScenario(scenario) {
     const optionsHeading = document.querySelector('.options-heading');
     if (optionsHeading) {
         optionsHeading.textContent = 'Choose your answer';
-        optionsHeading.classList.remove('correct', 'incorrect');
     }
 
     // Draw pitch and players
@@ -194,12 +244,31 @@ function loadScenario(scenario) {
     shuffledOptions.forEach((option, index) => {
         const button = document.createElement('button');
         button.className = 'option-btn';
-        button.textContent = option.text;
         button.setAttribute('data-option-id', option.id);
         button.setAttribute('data-explanation', option.explanation);
         button.style.opacity = '0';
         button.style.animation = `slideInRight 0.5s ease-out ${0.4 + index * 0.1}s forwards`;
-        button.onclick = () => selectAnswer(option.id, scenario.correctAnswer, scenario.explanation, shuffledOptions);
+
+        // Create content wrapper
+        const contentWrapper = document.createElement('div');
+        contentWrapper.className = 'option-btn-content';
+
+        // Create text span
+        const textSpan = document.createElement('span');
+        textSpan.className = 'option-text';
+        textSpan.textContent = option.text;
+        contentWrapper.appendChild(textSpan);
+
+        button.appendChild(contentWrapper);
+
+        // Only make the button clickable if not answered
+        button.onclick = (e) => {
+            // Don't trigger if clicking a child button
+            if (e.target.classList.contains('why-btn')) {
+                return;
+            }
+            selectOptionOnly(option.id);
+        };
 
         // Add hover effect to highlight player on pitch (only before answering)
         button.addEventListener('mouseenter', () => {
@@ -215,6 +284,12 @@ function loadScenario(scenario) {
 
         optionsContainer.appendChild(button);
     });
+
+    // Set up submit button
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.classList.remove('hidden');
+    submitBtn.disabled = true;
+    submitBtn.onclick = () => submitAnswer(scenario.correctAnswer, shuffledOptions);
 
     // Hide feedback and next button
     document.getElementById('feedback').classList.add('hidden');
@@ -326,22 +401,47 @@ function drawPlayers(players) {
     });
 }
 
-// Handle answer selection
-function selectAnswer(selectedId, correctId, explanation, allOptions) {
+// Select an option (but don't submit yet)
+function selectOptionOnly(optionId) {
+    if (answered) return;
+
+    selectedOption = optionId;
+
+    // Remove previous selection styling
+    document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+
+    // Add selection styling to clicked button
+    const selectedBtn = document.querySelector(`[data-option-id="${optionId}"]`);
+    if (selectedBtn) {
+        selectedBtn.classList.add('selected');
+    }
+
+    // Enable submit button
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = false;
+}
+
+// Submit the selected answer
+function submitAnswer(correctId, allOptions) {
+    if (answered || !selectedOption) return;
+
+    selectAnswer(selectedOption, correctId, allOptions);
+}
+
+// Handle answer selection (after lock in)
+function selectAnswer(selectedId, correctId, allOptions) {
     if (answered) return; // Prevent multiple answers
     answered = true;
+
+    // Hide submit button
+    document.getElementById('submit-btn').classList.add('hidden');
 
     // Remove focus from all buttons (prevents hover state on mobile)
     document.querySelectorAll('.option-btn').forEach(btn => btn.blur());
 
     const isCorrect = selectedId === correctId;
-
-    // Update the options heading to show correct/incorrect
-    const optionsHeading = document.querySelector('.options-heading');
-    if (optionsHeading) {
-        optionsHeading.textContent = isCorrect ? '✓ Correct' : '✗ Incorrect';
-        optionsHeading.classList.add(isCorrect ? 'correct' : 'incorrect');
-    }
 
     // Update score
     if (isCorrect) {
@@ -349,11 +449,17 @@ function selectAnswer(selectedId, correctId, explanation, allOptions) {
         updateScoreDisplay();
     }
 
+    // Advance to next scenario index (so refresh doesn't show same question)
+    currentScenarioIndex++;
+
+    // Save state after answering
+    saveGameState();
+
     // Hide the separate feedback section
     const feedback = document.getElementById('feedback');
     feedback.classList.add('hidden');
 
-    // Expand all options to show explanations
+    // Process all options
     const buttons = document.querySelectorAll('.option-btn');
     buttons.forEach(btn => {
         const btnId = btn.getAttribute('data-option-id');
@@ -365,56 +471,6 @@ function selectAnswer(selectedId, correctId, explanation, allOptions) {
         const matchingOption = allOptions.find(opt => opt.id == btnId);
 
         if (matchingOption) {
-            // Extract verdict and explanation (supports both ~ and ? for risky options)
-            const verdictMatch = matchingOption.explanation.match(/^([✓✗~?])\s*([A-Z\s]+):\s*(.+)$/);
-            let verdictBadge = null;
-            let explanationText = matchingOption.explanation;
-
-            if (verdictMatch) {
-                const symbol = verdictMatch[1];
-                const verdict = verdictMatch[2].trim();
-                explanationText = verdictMatch[3];
-
-                // Map verdicts to friendlier terms (with symbols)
-                let displayText = `${symbol} ${verdict}`;
-
-                if (verdict === 'POOR CHOICE') {
-                    displayText = `${symbol} NOT RECOMMENDED`;
-                } else if (verdict === 'OKAY') {
-                    displayText = `${symbol} COULD WORK`;
-                } else if (verdict === 'RISKY') {
-                    displayText = `${symbol} RISKY OPTION`;
-                }
-
-                // Create verdict badge
-                verdictBadge = document.createElement('span');
-                verdictBadge.className = 'verdict-badge';
-                verdictBadge.textContent = displayText;
-
-                // Add appropriate class based on symbol
-                if (symbol === '✓') {
-                    verdictBadge.classList.add('best');
-                } else if (symbol === '✗') {
-                    verdictBadge.classList.add('poor');
-                } else if (symbol === '~' || symbol === '?') {
-                    verdictBadge.classList.add('risky');
-                }
-            }
-
-            // Create expanded content for explanation
-            const explanationDiv = document.createElement('div');
-            explanationDiv.className = 'option-explanation';
-
-            // Add explanation text
-            const textNode = document.createTextNode(explanationText);
-            explanationDiv.appendChild(textNode);
-
-            // Add verdict badge to bottom if exists
-            if (verdictBadge) {
-                explanationDiv.appendChild(document.createElement('br'));
-                explanationDiv.appendChild(verdictBadge);
-            }
-
             // Add visual indicators based on the explanation quality markers
             if (matchingOption.explanation.startsWith('✓')) {
                 btn.classList.add('correct-answer');
@@ -424,8 +480,13 @@ function selectAnswer(selectedId, correctId, explanation, allOptions) {
                 btn.classList.add('neutral-answer');
             }
 
-            // Append explanation to button
-            btn.appendChild(explanationDiv);
+            // Only expand the selected answer
+            if (btnId == selectedId) {
+                expandOption(btn, matchingOption, isCorrect);
+            } else {
+                // Add "Why?" button for other options
+                addWhyButton(btn, matchingOption);
+            }
         }
     });
 
@@ -435,14 +496,104 @@ function selectAnswer(selectedId, correctId, explanation, allOptions) {
     nextBtn.onclick = nextScenario;
 }
 
+// Expand an option to show its explanation
+function expandOption(btn, matchingOption, isCorrect = null) {
+    // Add result badge to top right if this is the selected answer
+    if (isCorrect !== null) {
+        const resultBadge = document.createElement('span');
+        resultBadge.className = 'result-badge';
+        resultBadge.textContent = isCorrect ? '✓ Correct' : '✗ Incorrect';
+        resultBadge.classList.add(isCorrect ? 'correct' : 'incorrect');
+
+        const contentWrapper = btn.querySelector('.option-btn-content');
+        if (contentWrapper) {
+            contentWrapper.appendChild(resultBadge);
+        }
+    }
+
+    // Extract verdict and explanation (supports both ~ and ? for risky options)
+    const verdictMatch = matchingOption.explanation.match(/^([✓✗~?])\s*([A-Z\s]+):\s*(.+)$/);
+    let verdictBadge = null;
+    let explanationText = matchingOption.explanation;
+
+    if (verdictMatch) {
+        const symbol = verdictMatch[1];
+        const verdict = verdictMatch[2].trim();
+        explanationText = verdictMatch[3];
+
+        // Map verdicts to friendlier terms (with symbols)
+        let displayText = `${symbol} ${verdict}`;
+
+        if (verdict === 'POOR CHOICE') {
+            displayText = `${symbol} NOT RECOMMENDED`;
+        } else if (verdict === 'OKAY') {
+            displayText = `${symbol} COULD WORK`;
+        } else if (verdict === 'RISKY') {
+            displayText = `${symbol} RISKY OPTION`;
+        }
+
+        // Create verdict badge
+        verdictBadge = document.createElement('span');
+        verdictBadge.className = 'verdict-badge';
+        verdictBadge.textContent = displayText;
+
+        // Add appropriate class based on symbol
+        if (symbol === '✓') {
+            verdictBadge.classList.add('best');
+        } else if (symbol === '✗') {
+            verdictBadge.classList.add('poor');
+        } else if (symbol === '~' || symbol === '?') {
+            verdictBadge.classList.add('risky');
+        }
+    }
+
+    // Create expanded content for explanation
+    const explanationDiv = document.createElement('div');
+    explanationDiv.className = 'option-explanation';
+
+    // Add explanation text
+    const textNode = document.createTextNode(explanationText);
+    explanationDiv.appendChild(textNode);
+
+    // Add verdict badge to bottom if exists
+    if (verdictBadge) {
+        explanationDiv.appendChild(document.createElement('br'));
+        explanationDiv.appendChild(verdictBadge);
+    }
+
+    // Append explanation to button
+    btn.appendChild(explanationDiv);
+}
+
+// Add "Why?" button to unexpanded options
+function addWhyButton(btn, matchingOption) {
+    const whyDiv = document.createElement('div');
+    whyDiv.className = 'why-btn';
+    whyDiv.textContent = 'Why?';
+
+    // Add to the content wrapper
+    const contentWrapper = btn.querySelector('.option-btn-content');
+    if (contentWrapper) {
+        contentWrapper.appendChild(whyDiv);
+    }
+
+    // Make the entire button clickable to expand
+    btn.style.cursor = 'pointer';
+    btn.onclick = () => {
+        whyDiv.remove();
+        expandOption(btn, matchingOption);
+    };
+}
+
 // Move to next scenario
 function nextScenario() {
-    currentScenarioIndex++;
-
+    // Index already incremented in selectAnswer, just load next scenario
     if (currentScenarioIndex < shuffledScenarios.length) {
         loadScenario(shuffledScenarios[currentScenarioIndex]);
+        saveGameState();
     } else {
         showFinalScore();
+        clearGameState();
     }
 }
 
@@ -611,11 +762,45 @@ function clearHighlight() {
 
 // Start the app when page loads
 window.addEventListener('DOMContentLoaded', () => {
-    // Set up Play button
+    // Always set up Play button
     document.getElementById('play-btn').addEventListener('click', startGame);
+
+    // Check for saved game state on page load
+    const savedState = loadGameState();
+
+    if (savedState && savedState.currentScenarioIndex < savedState.shuffledScenarios.length) {
+        // Auto-resume the game
+        startGameUI();
+        init(savedState);
+        setupRestartButton();
+    }
 });
 
+// Set up restart button
+function setupRestartButton() {
+    const restartBtn = document.getElementById('restart-btn');
+    restartBtn.onclick = () => {
+        // Clear game state
+        clearGameState();
+
+        // Hide game content
+        document.getElementById('game-content').style.display = 'none';
+        document.getElementById('game-header').style.display = 'none';
+        document.getElementById('score-panel').style.display = 'none';
+
+        // Show start screen
+        document.getElementById('start-screen').style.display = 'flex';
+    };
+}
+
 function startGame() {
+    // Start fresh game (saved state already checked on page load)
+    startGameUI();
+    init();
+    setupRestartButton();
+}
+
+function startGameUI() {
     // Hide start screen
     document.getElementById('start-screen').style.display = 'none';
 
@@ -630,7 +815,4 @@ function startGame() {
     gameContent.style.display = 'grid';
     gameContent.style.opacity = '0';
     gameContent.style.animation = 'fadeIn 0.6s ease-out forwards';
-
-    // Initialize the game
-    init();
 }

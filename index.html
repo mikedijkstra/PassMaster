@@ -21,15 +21,18 @@
     <meta property="twitter:image" content="https://passmaster.dijkstra.com.au/social-card.png">
 
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
-    <link rel="stylesheet" href="styles.css?v=4">
+    <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
     <div class="container">
         <header id="game-header" style="display: none;">
-            <a href="/" style="text-decoration: none; color: inherit;">
-                <h1>⚽ PassMaster</h1>
-            </a>
-            <p class="subtitle">Learn positioning and passing decisions</p>
+            <div class="header-left">
+                <a href="/" style="text-decoration: none; color: inherit;">
+                    <h1>⚽ PassMaster</h1>
+                </a>
+                <p class="subtitle">Learn positioning and passing decisions</p>
+            </div>
+            <button id="restart-btn" class="restart-btn">Start Again</button>
         </header>
 
         <div class="score-panel" id="score-panel" style="display: none;">
@@ -62,13 +65,14 @@
             <div class="options-panel">
                 <h3 class="options-heading">Choose your answer</h3>
                 <div id="options-container"></div>
+                <button id="submit-btn" class="hidden">Choose Answer</button>
                 <div id="feedback" class="feedback hidden"></div>
                 <button id="next-btn" class="hidden">Next</button>
             </div>
         </div>
     </div>
 
-    <script src="scenarios.js?v=4"></script>
-    <script src="app.js?v=4"></script>
+    <script src="scenarios.js?v=6"></script>
+    <script src="app.js?v=6"></script>
 </body>
 </html>
