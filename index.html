@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PassMaster - Football Positioning Trainer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header id="game-header" style="display: none;">
+            <a href="/" style="text-decoration: none; color: inherit;">
+                <h1>⚽ PassMaster</h1>
+            </a>
+            <p class="subtitle">Learn positioning and passing decisions</p>
+        </header>
+
+        <div class="score-panel" id="score-panel" style="display: none;">
+            <div class="score">Score: <span id="score">0</span></div>
+            <div class="scenario-count">Scenario <span id="current">1</span> of <span id="total">0</span></div>
+        </div>
+
+        <div id="start-screen" class="start-screen">
+            <div class="start-content">
+                <div class="start-icon">⚽</div>
+                <h2>Welcome to PassMaster</h2>
+                <p>Test your football IQ with game scenarios. Learn when to pass, when to clear, and how to make smart decisions on the pitch.</p>
+                <button id="play-btn" class="play-btn">Play</button>
+            </div>
+        </div>
+
+        <div class="main-content" id="game-content" style="display: none;">
+            <div class="pitch-column">
+                <div class="question-header">
+                    <h2 id="question-title">Loading...</h2>
+                    <p id="question-text"></p>
+                </div>
+                <div class="pitch-container">
+                    <svg id="pitch" viewBox="0 0 800 600">
+                        <!-- Pitch will be drawn here -->
+                    </svg>
+                </div>
+            </div>
+
+            <div class="options-panel">
+                <h3 class="options-heading">Choose your answer</h3>
+                <div id="options-container"></div>
+                <div id="feedback" class="feedback hidden"></div>
+                <button id="next-btn" class="hidden">Next Scenario</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="scenarios.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
