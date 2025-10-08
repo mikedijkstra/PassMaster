@@ -255,9 +255,13 @@ header h1 {
 
   .options-panel {
     padding: 15px;
-    padding-bottom: 100px;
     overflow-y: visible;
     flex: none;
+  }
+
+  #submit-btn,
+  #next-btn {
+    margin-bottom: 100px;
   }
 }
 
@@ -787,33 +791,48 @@ header h1 {
   }
 
   header {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     gap: 10px;
-    padding: 10px 15px;
+    padding: 15px 15px;
     position: sticky;
     top: 0;
     z-index: 100;
   }
 
   .header-left {
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    gap: 5px;
+    gap: 0;
   }
 
   header h1 {
-    font-size: 1.5em;
+    font-size: 1.3em;
   }
 
   .subtitle {
-    text-align: center;
-    font-size: 0.8em;
+    display: none;
   }
 
   .restart-btn {
-    font-size: 0.85em;
-    padding: 6px 16px;
+    font-size: 1.3em;
+    padding: 0;
+    line-height: 1;
+    min-width: auto;
+    width: 36px;
+    height: 36px;
+    text-indent: -9999px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .restart-btn::before {
+    content: '↻';
+    text-indent: 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
 
   .score-panel {
@@ -821,7 +840,7 @@ header h1 {
     padding: 10px 15px;
     font-size: 0.9em;
     position: sticky;
-    top: 73px;
+    top: 66px;
     z-index: 99;
   }
 
