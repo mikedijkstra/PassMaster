@@ -201,9 +201,17 @@ header h1 {
 
 /* Mobile portrait - single column */
 @media (max-width: 767px) {
+    .container {
+        height: auto;
+        min-height: 100vh;
+        overflow: visible;
+    }
+
     .main-content {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto auto;
+        overflow: visible;
+        flex: none;
     }
 
     .pitch-column {
@@ -219,7 +227,8 @@ header h1 {
 
     .options-panel {
         padding: 15px;
-        flex: 1;
+        overflow-y: visible;
+        flex: none;
     }
 }
 
@@ -682,11 +691,22 @@ header h1 {
 
 /* Mobile optimization (under 768px) */
 @media (max-width: 767px) {
+    body {
+        background: white;
+    }
+
+    .container {
+        background: white;
+    }
+
     header {
         flex-direction: column;
         align-items: center;
         gap: 5px;
         padding: 10px 15px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
     }
 
     header h1 {
@@ -702,6 +722,9 @@ header h1 {
         flex-direction: row;
         padding: 10px 15px;
         font-size: 0.9em;
+        position: sticky;
+        top: 73px;
+        z-index: 99;
     }
 
     .pitch-column {
