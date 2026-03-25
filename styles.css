@@ -217,6 +217,223 @@ header h1 {
   box-shadow: 0 1px 3px rgba(30, 60, 114, 0.2);
 }
 
+/* Module selection screen */
+.module-screen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  padding: 20px;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.module-content {
+  text-align: center;
+  max-width: 600px;
+  width: 100%;
+}
+
+.module-content h2 {
+  font-size: 2em;
+  color: #333;
+  margin-bottom: 30px;
+  animation: fadeInUp 0.8s ease-out 0.3s backwards;
+}
+
+.module-cards {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.module-card {
+  background: white;
+  border: 3px solid #dee2e6;
+  border-radius: 12px;
+  padding: 30px 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  flex: 1;
+  max-width: 260px;
+  animation: fadeInUp 0.6s ease-out backwards;
+}
+
+.module-card:nth-child(1) {
+  animation-delay: 0.4s;
+}
+
+.module-card:nth-child(2) {
+  animation-delay: 0.55s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .module-card:hover {
+    border-color: #1e3c72;
+    box-shadow: 0 4px 12px rgba(30, 60, 114, 0.2);
+    transform: translateY(-4px);
+  }
+}
+
+.module-card:active {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(30, 60, 114, 0.15);
+}
+
+.module-card-icon {
+  font-size: 3em;
+  margin-bottom: 15px;
+}
+
+.module-card-title {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.module-card-description {
+  font-size: 0.95em;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+.module-card-count {
+  font-size: 0.85em;
+  font-weight: 600;
+  color: #1e3c72;
+}
+
+/* Lesson screen */
+.lesson-screen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f9fa;
+  padding: 20px;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.lesson-content {
+  text-align: center;
+  max-width: 700px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lesson-pitch-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+#lesson-pitch {
+  width: 100%;
+  height: auto;
+}
+
+.lesson-text {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.lesson-text h2 {
+  font-size: 1.8em;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.lesson-text p {
+  font-size: 1.15em;
+  color: #555;
+  line-height: 1.5;
+}
+
+.lesson-keyword {
+  font-weight: 900;
+}
+
+.lesson-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.lesson-dots {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.lesson-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #dee2e6;
+  transition: background 0.3s ease;
+}
+
+.lesson-dot.active {
+  background: #1e3c72;
+}
+
+.lesson-dot.completed {
+  background: #28a745;
+}
+
+.lesson-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.lesson-skip-btn {
+  background: transparent;
+  color: #666;
+  border: 2px solid #dee2e6;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.lesson-skip-btn:hover {
+  background: #e9ecef;
+}
+
+.lesson-next-btn {
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: white;
+  border: none;
+  padding: 12px 40px;
+  border-radius: 8px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: bounceIn 0.6s ease-out;
+}
+
+.lesson-next-btn:hover {
+  background: linear-gradient(135deg, #2a4c92 0%, #3a62b8 100%);
+  box-shadow: 0 2px 8px rgba(30, 60, 114, 0.3);
+}
+
+.lesson-next-btn:active {
+  transform: translateY(1px);
+}
+
+/* SVG player animation for lessons */
+#lesson-pitch g {
+  transition: transform 1s ease-in-out;
+}
+
 .main-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -884,5 +1101,50 @@ header h1 {
   .play-btn {
     padding: 15px 50px;
     font-size: 1.1em;
+  }
+
+  .module-cards {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .module-card {
+    max-width: 100%;
+    padding: 25px 20px;
+  }
+
+  .module-content h2 {
+    font-size: 1.5em;
+    margin-bottom: 20px;
+  }
+
+  .module-card-icon {
+    font-size: 2.5em;
+  }
+
+  .module-card-title {
+    font-size: 1.15em;
+  }
+
+  .lesson-content {
+    gap: 15px;
+  }
+
+  .lesson-text h2 {
+    font-size: 1.4em;
+  }
+
+  .lesson-text p {
+    font-size: 1em;
+  }
+
+  .lesson-buttons {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
+
+  .lesson-next-btn,
+  .lesson-skip-btn {
+    width: 100%;
   }
 }

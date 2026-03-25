@@ -6,6 +6,7 @@ let score = 0;
 let answered = false;
 let shuffledScenarios = [];
 let selectedOption = null;
+let selectedModule = null;
 
 // Shuffle array helper function
 function shuffleArray(array) {
@@ -23,6 +24,7 @@ function saveGameState() {
         currentScenarioIndex,
         score,
         shuffledScenarioIds: shuffledScenarios.map(s => s.id),
+        selectedModule,
         timestamp: Date.now()
     };
     localStorage.setItem('passMasterGameState', JSON.stringify(gameState));
@@ -60,11 +62,15 @@ function init(resumeState = null) {
         currentScenarioIndex = resumeState.currentScenarioIndex;
         score = resumeState.score;
         shuffledScenarios = resumeState.shuffledScenarios;
+        selectedModule = resumeState.selectedModule || null;
     } else {
-        // Start fresh
+        // Start fresh — filter scenarios by selected module
         currentScenarioIndex = 0;
         score = 0;
-        shuffledScenarios = shuffleArray(scenarios);
+        const moduleScenarios = selectedModule
+            ? scenarios.filter(s => s.module === selectedModule)
+            : scenarios;
+        shuffledScenarios = shuffleArray(moduleScenarios);
         clearGameState();
     }
 
@@ -89,8 +95,8 @@ function init(resumeState = null) {
 }
 
 // Draw the football pitch
-function drawPitch() {
-    const svg = document.getElementById('pitch');
+function drawPitch(svgId = 'pitch') {
+    const svg = document.getElementById(svgId);
     svg.innerHTML = ''; // Clear existing content
 
     const width = 800;
@@ -297,8 +303,8 @@ function loadScenario(scenario) {
 }
 
 // Draw players on the pitch
-function drawPlayers(players) {
-    const svg = document.getElementById('pitch');
+function drawPlayers(players, svgId = 'pitch') {
+    const svg = document.getElementById(svgId);
 
     players.forEach((player, index) => {
         // Create a group for each player
@@ -694,8 +700,10 @@ function showFinalScore() {
         optionsContainer.style.textAlign = '';
         optionsContainer.style.maxWidth = '';
 
-        // Show start screen
-        document.getElementById('start-screen').style.display = 'flex';
+        // Reset module and show module selection
+        selectedModule = null;
+        showModuleScreen(true);
+        renderModuleCards();
     };
     nextBtn.classList.remove('hidden');
 }
@@ -760,10 +768,50 @@ function clearHighlight() {
     highlights.forEach(highlight => highlight.remove());
 }
 
+// Render module selection cards
+function renderModuleCards() {
+    const container = document.getElementById('module-cards');
+    container.innerHTML = '';
+
+    modules.forEach(mod => {
+        const count = scenarios.filter(s => s.module === mod.id).length;
+
+        const card = document.createElement('div');
+        card.className = 'module-card';
+        card.innerHTML = `
+            <div class="module-card-icon">${mod.icon}</div>
+            <div class="module-card-title">${mod.title}</div>
+            <div class="module-card-description">${mod.description}</div>
+            <div class="module-card-count">${count} scenarios</div>
+        `;
+        card.onclick = () => {
+            selectedModule = mod.id;
+            showModuleScreen(false);
+
+            // Show lesson if this module has one, otherwise go straight to quiz
+            if (mod.lesson) {
+                showLesson(mod);
+            } else {
+                startGameFromModule();
+            }
+        };
+        container.appendChild(card);
+    });
+}
+
+// Show/hide module selection screen
+function showModuleScreen(show) {
+    document.getElementById('module-screen').style.display = show ? 'flex' : 'none';
+}
+
 // Start the app when page loads
 window.addEventListener('DOMContentLoaded', () => {
-    // Always set up Play button
-    document.getElementById('play-btn').addEventListener('click', startGame);
+    // Play button → show module selection
+    document.getElementById('play-btn').addEventListener('click', () => {
+        document.getElementById('start-screen').style.display = 'none';
+        showModuleScreen(true);
+        renderModuleCards();
+    });
 
     // Check for saved game state on page load
     const savedState = loadGameState();
@@ -782,27 +830,152 @@ function setupRestartButton() {
     restartBtn.onclick = () => {
         // Clear game state
         clearGameState();
+        selectedModule = null;
 
         // Hide game content
         document.getElementById('game-content').style.display = 'none';
         document.getElementById('game-header').style.display = 'none';
         document.getElementById('score-panel').style.display = 'none';
 
-        // Show start screen
-        document.getElementById('start-screen').style.display = 'flex';
+        // Show module selection
+        showModuleScreen(true);
+        renderModuleCards();
     };
 }
 
-function startGame() {
-    // Start fresh game (saved state already checked on page load)
+// ============================
+// LESSON SCREEN
+// ============================
+
+let currentLessonStep = 0;
+let currentLessonModule = null;
+
+function showLesson(mod) {
+    currentLessonModule = mod;
+    currentLessonStep = 0;
+
+    document.getElementById('lesson-screen').style.display = 'flex';
+    renderLessonStep();
+
+    // Wire up buttons
+    document.getElementById('lesson-skip-btn').onclick = () => {
+        completeLesson();
+    };
+    document.getElementById('lesson-next-btn').onclick = () => {
+        advanceLessonStep();
+    };
+}
+
+function renderLessonStep() {
+    const lesson = currentLessonModule.lesson;
+    const step = lesson.steps[currentLessonStep];
+    const total = lesson.steps.length;
+
+    // Draw pitch and players
+    drawPitch('lesson-pitch');
+    drawPlayers(step.players, 'lesson-pitch');
+
+    // Update headline — highlight the keyword
+    const headline = document.getElementById('lesson-headline');
+    if (step.keyword) {
+        headline.innerHTML = step.headline.replace(
+            step.keyword,
+            `<span class="lesson-keyword" style="color: ${step.keywordColor}">${step.keyword}</span>`
+        );
+    } else {
+        headline.textContent = step.headline;
+    }
+
+    // Update body text
+    document.getElementById('lesson-body').textContent = step.body;
+
+    // Render step dots
+    const dotsContainer = document.getElementById('lesson-dots');
+    dotsContainer.innerHTML = '';
+    for (let i = 0; i < total; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'lesson-dot';
+        if (i < currentLessonStep) dot.classList.add('completed');
+        if (i === currentLessonStep) dot.classList.add('active');
+        dotsContainer.appendChild(dot);
+    }
+
+    // Update button text
+    const nextBtn = document.getElementById('lesson-next-btn');
+    if (currentLessonStep === total - 1) {
+        nextBtn.textContent = "Got it! Start the Quiz";
+    } else {
+        nextBtn.textContent = 'Next';
+    }
+
+    // Trigger animation after a short delay
+    setTimeout(() => {
+        animateLessonPlayers(step);
+    }, 800);
+}
+
+function animateLessonPlayers(step) {
+    if (!step.animateTo) return;
+
+    const svg = document.getElementById('lesson-pitch');
+
+    step.animateTo.forEach((target, i) => {
+        const original = step.players.find(p => p.id === target.id);
+        const group = svg.querySelector(`g[data-player-id="${target.id}"]`);
+        if (group && original) {
+            const dx = target.x - original.x;
+            const dy = target.y - original.y;
+            group.style.transitionDelay = `${i * 0.1}s`;
+            group.style.transform = `translate(${dx}px, ${dy}px)`;
+        }
+    });
+
+    // Add annotation text after animation completes
+    if (step.annotation) {
+        setTimeout(() => {
+            const annotationText = createSVGElement('text', {
+                x: 400,
+                y: 310,
+                'text-anchor': 'middle',
+                fill: step.annotationColor || '#fff',
+                'font-size': '48',
+                'font-weight': '900',
+                opacity: 0.3,
+                class: 'lesson-annotation'
+            });
+            annotationText.textContent = step.annotation;
+            svg.appendChild(annotationText);
+        }, 800 + step.animateTo.length * 100);
+    }
+}
+
+function advanceLessonStep() {
+    const total = currentLessonModule.lesson.steps.length;
+    if (currentLessonStep < total - 1) {
+        currentLessonStep++;
+        renderLessonStep();
+    } else {
+        completeLesson();
+    }
+}
+
+function completeLesson() {
+    document.getElementById('lesson-screen').style.display = 'none';
+    startGameFromModule();
+}
+
+function startGameFromModule() {
+    // Start fresh game with selected module
     startGameUI();
     init();
     setupRestartButton();
 }
 
 function startGameUI() {
-    // Hide start screen
+    // Hide start screen, module screen, and lesson screen
     document.getElementById('start-screen').style.display = 'none';
+    showModuleScreen(false);
+    document.getElementById('lesson-screen').style.display = 'none';
 
     // Show header and score panel
     const header = document.getElementById('game-header');
