@@ -7,6 +7,7 @@ let answered = false;
 let shuffledScenarios = [];
 let selectedOption = null;
 let selectedModule = null;
+let selectedPosition = null;
 
 // Shuffle array helper function
 function shuffleArray(array) {
@@ -25,6 +26,7 @@ function saveGameState() {
         score,
         shuffledScenarioIds: shuffledScenarios.map(s => s.id),
         selectedModule,
+        selectedPosition,
         timestamp: Date.now()
     };
     localStorage.setItem('passMasterGameState', JSON.stringify(gameState));
@@ -63,14 +65,18 @@ function init(resumeState = null) {
         score = resumeState.score;
         shuffledScenarios = resumeState.shuffledScenarios;
         selectedModule = resumeState.selectedModule || null;
+        selectedPosition = resumeState.selectedPosition || null;
     } else {
-        // Start fresh — filter scenarios by selected module
+        // Start fresh — filter scenarios by selected module and position
         currentScenarioIndex = 0;
         score = 0;
-        const moduleScenarios = selectedModule
+        let filtered = selectedModule
             ? scenarios.filter(s => s.module === selectedModule)
             : scenarios;
-        shuffledScenarios = shuffleArray(moduleScenarios);
+        if (selectedPosition) {
+            filtered = filtered.filter(s => s.position === selectedPosition);
+        }
+        shuffledScenarios = shuffleArray(filtered);
         clearGameState();
     }
 
@@ -238,7 +244,7 @@ function loadScenario(scenario) {
 
     // Update question panel
     document.getElementById('question-title').textContent = scenario.title;
-    document.getElementById('question-text').textContent = scenario.description + ' ' + scenario.question;
+    document.getElementById('question-text').textContent = scenario.description ? scenario.description + ' ' + scenario.question : scenario.question;
 
     // Clear and create options
     const optionsContainer = document.getElementById('options-container');
@@ -700,8 +706,9 @@ function showFinalScore() {
         optionsContainer.style.textAlign = '';
         optionsContainer.style.maxWidth = '';
 
-        // Reset module and show module selection
+        // Reset module/position and show module selection
         selectedModule = null;
+        selectedPosition = null;
         showModuleScreen(true);
         renderModuleCards();
     };
@@ -788,8 +795,15 @@ function renderModuleCards() {
             selectedModule = mod.id;
             showModuleScreen(false);
 
-            // Show lesson if this module has one, otherwise go straight to quiz
-            if (mod.lesson) {
+            // If module has positions, show position selection
+            if (mod.positions) {
+                // Show lesson first if it has one, then position selection
+                if (mod.lesson) {
+                    showLesson(mod);
+                } else {
+                    showPositionScreen(mod);
+                }
+            } else if (mod.lesson) {
                 showLesson(mod);
             } else {
                 startGameFromModule();
@@ -831,6 +845,7 @@ function setupRestartButton() {
         // Clear game state
         clearGameState();
         selectedModule = null;
+        selectedPosition = null;
 
         // Hide game content
         document.getElementById('game-content').style.display = 'none';
@@ -961,7 +976,57 @@ function advanceLessonStep() {
 
 function completeLesson() {
     document.getElementById('lesson-screen').style.display = 'none';
-    startGameFromModule();
+
+    // If the module has positions, show position selection next
+    if (currentLessonModule && currentLessonModule.positions) {
+        showPositionScreen(currentLessonModule);
+    } else {
+        startGameFromModule();
+    }
+}
+
+// ============================
+// POSITION SELECTION SCREEN
+// ============================
+
+function showPositionScreen(mod) {
+    document.getElementById('position-screen').style.display = 'flex';
+    renderPositionCards(mod);
+}
+
+function hidePositionScreen() {
+    document.getElementById('position-screen').style.display = 'none';
+}
+
+function renderPositionCards(mod) {
+    const container = document.getElementById('position-cards');
+    container.innerHTML = '';
+
+    mod.positions.forEach(pos => {
+        const count = scenarios.filter(s => s.module === mod.id && s.position === pos.id).length;
+        const hasScenarios = count > 0;
+
+        const card = document.createElement('div');
+        card.className = 'position-card' + (hasScenarios ? '' : ' disabled');
+        card.innerHTML = `
+            <div class="position-card-icon">${pos.icon}</div>
+            <div class="position-card-title">${pos.title}</div>
+            ${hasScenarios
+                ? `<div class="position-card-count">${count} scenarios</div>`
+                : `<div class="position-card-soon">Coming soon</div>`
+            }
+        `;
+
+        if (hasScenarios) {
+            card.onclick = () => {
+                selectedPosition = pos.id;
+                hidePositionScreen();
+                startGameFromModule();
+            };
+        }
+
+        container.appendChild(card);
+    });
 }
 
 function startGameFromModule() {
@@ -972,9 +1037,10 @@ function startGameFromModule() {
 }
 
 function startGameUI() {
-    // Hide start screen, module screen, and lesson screen
+    // Hide start screen, module screen, position screen, and lesson screen
     document.getElementById('start-screen').style.display = 'none';
     showModuleScreen(false);
+    hidePositionScreen();
     document.getElementById('lesson-screen').style.display = 'none';
 
     // Show header and score panel
